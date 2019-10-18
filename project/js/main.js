@@ -1,3 +1,7 @@
+$(document).ready(function(){
+	getPosts();
+})
+
 function handleSignIn(){
 	var provider = new firebase.auth.GoogleAuthProvider();
 	firebase.auth().signInWithPopup(provider).then(function(result) {
@@ -19,6 +23,31 @@ function handleSignIn(){
 });
 }
 
+function handleMessageFormSubmit(){
+	var postTitle = $("#post-title").val();
+	var postBody = $("#post-body").val();
+	addMessage(postTitle,postBody);
+}
+
+function addMessage(postTitle,postBody){
+	var postData = {
+		title: postTitle,
+		body: postBody
+	}
+	var database = firebase.database().ref("posts");
+
+	var newPostRef = database.push();
+	newPostRef.set(postData, function(error) {
+    if (error) {
+      // The write failed...
+    } else {
+      // Data saved successfully!
+      window.location.reload();
+    }
+  });
+
+}
+
 
 function getWeather(searchQuery){
 	var url = "https://api.openweathermap.org/data/2.5/weather?q=" + searchQuery + "&units=imperial&APPID="+apiKey;
@@ -30,7 +59,7 @@ function getWeather(searchQuery){
 	$(".error-message").text("");
 
 	//IF success, do this, else IF fail display error message
-	// Jquert $ targets HTMl elements with a certain class
+	// Jquery $ targets HTMl elements with a certain class
 	$.ajax(url,{success: function(data){
 		$(".city").text(data.name);
 		$(".temp").text(data.main.temp);
@@ -52,4 +81,15 @@ function showPicture(){
 
   // jQuery can do a lot of crazy stuff, so make sure to Google around to find out more
   
+}
+
+function getPosts(){
+return firebase.database().ref("posts").once('value').then(function(snapshot) {
+	var posts = snapshot.val();
+	for(var postKey in posts){
+		var post = posts[postKey];
+		$("#post-listing").append("<div>" + post.title + " - " + post.body + "</div>")
+	}
+  // ...
+});
 }
